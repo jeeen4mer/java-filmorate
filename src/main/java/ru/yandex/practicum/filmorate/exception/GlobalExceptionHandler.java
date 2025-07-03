@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.validation.FieldError;
+
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
@@ -16,17 +18,14 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @Slf4j
-public class GlobalExceptionHandler extends RuntimeException {
-    private static final int HTTP_STATUS_BAD_REQUEST = 404;
+public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleExceptions(
-            final MethodArgumentNotValidException ex) {
+    public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
-        body.put("status", HTTP_STATUS_BAD_REQUEST);
+        body.put("status", HttpStatus.BAD_REQUEST.value());
 
-        // Собираем все сообщения ошибок в список
         List<String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -34,25 +33,28 @@ public class GlobalExceptionHandler extends RuntimeException {
                 .collect(Collectors.toList());
 
         body.put("errorMessages", errors);
-        log.warn(String.valueOf(errors));
+        log.warn("Ошибки валидации: {}", errors);
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleNotFoundException(
-            final NotFoundException ex) {
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", ex.getMessage());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
 
-        log.warn(ex.getMessage());
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+        List<String> errors = ex.getConstraintViolations()
+                .stream()
+                .map(v -> v.getMessage())
+                .collect(Collectors.toList());
+
+        body.put("errorMessages", errors);
+        log.warn("Ошибки валидации: {}", errors);
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(ConditionsNotMetException.class)
-    public ResponseEntity<Map<String, Object>> handleConditionsNotMetException(
-            final ConditionsNotMetException ex) {
+    @ExceptionHandler({NotFoundException.class, ConditionsNotMetException.class})
+    public ResponseEntity<Map<String, Object>> handleNotFoundException(RuntimeException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.NOT_FOUND.value());
@@ -63,13 +65,13 @@ public class GlobalExceptionHandler extends RuntimeException {
     }
 
     @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<Map<String, Object>> exception(
-            final ValidationException ex) {
+    public ResponseEntity<Map<String, Object>> handleValidationException(ValidationException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("errorMessages", ex.getErrors());
+        body.put("error", ex.getMessage());
 
+        log.warn(ex.getMessage());
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 }

@@ -104,8 +104,7 @@ public class FilmControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(filmJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorMessages").isArray())
-                .andExpect(jsonPath("$.errorMessages[0]").value(
+                .andExpect(jsonPath("$.error").value(
                         "Дата релиза должна быть не раньше 28 декабря 1895 года"
                 ));
     }
