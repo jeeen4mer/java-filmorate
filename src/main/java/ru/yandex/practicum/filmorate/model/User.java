@@ -18,17 +18,21 @@ public class User {
     @NotNull(groups = UpdateValidationGroup.class, message = "ID не может быть null при обновлении")
     Long id;
 
-    @NotBlank(message = "Электронная почта не указана")
-    @Email(message = "Некорректный формат электронной почты")
+    @NotBlank(groups = CreateValidationGroup.class, message = "Электронная почта не указана")
+    @Email(groups = {CreateValidationGroup.class, UpdateValidationGroup.class}, message = "Некорректный формат электронной почты")
     String email;
 
-    @NotBlank(message = "Логин не указан")
-    @Pattern(regexp = "\\S+", message = "Логин не должен содержать пробелы")
+    @NotBlank(groups = CreateValidationGroup.class, message = "Логин не указан")
+    @Pattern(regexp = "\\S+", groups = {CreateValidationGroup.class, UpdateValidationGroup.class},
+            message = "Логин не должен содержать пробелы")
     String login;
 
+    @Size(groups = {CreateValidationGroup.class, UpdateValidationGroup.class},
+            min = 1, max = 50, message = "Имя должно быть от 1 до 50 символов")
     String name;
 
-    @PastOrPresent(message = "Дата рождения не может быть в будущем")
+    @PastOrPresent(groups = {CreateValidationGroup.class, UpdateValidationGroup.class},
+            message = "Дата рождения не может быть в будущем")
     LocalDate birthday;
 
     public String getName() {
