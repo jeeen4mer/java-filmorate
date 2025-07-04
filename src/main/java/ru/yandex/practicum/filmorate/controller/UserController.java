@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.validation.CreateValidationGroup;
 import ru.yandex.practicum.filmorate.validation.UpdateValidationGroup;
 
 import java.util.Collection;
@@ -26,7 +27,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User add(@Valid @RequestBody User user) {
+    public User add(@Validated({CreateValidationGroup.class}) @RequestBody User user) {
         checkName(user);
         user.setId(getNextId());
         users.put(user.getId(), user);
