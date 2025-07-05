@@ -5,8 +5,9 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.yandex.practicum.filmorate.validation.CreateValidationGroup;
 import ru.yandex.practicum.filmorate.validation.UpdateValidationGroup;
-
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Builder
@@ -27,13 +28,13 @@ public class User {
             message = "Логин не должен содержать пробелы")
     String login;
 
-    @Size(groups = {CreateValidationGroup.class, UpdateValidationGroup.class},
-            min = 1, max = 50, message = "Имя должно быть от 1 до 50 символов")
     String name;
 
     @PastOrPresent(groups = {CreateValidationGroup.class, UpdateValidationGroup.class},
             message = "Дата рождения не может быть в будущем")
     LocalDate birthday;
+
+    Set<Long> friends = new HashSet<>();
 
     public String getName() {
         return name == null || name.isBlank() ? login : name;
