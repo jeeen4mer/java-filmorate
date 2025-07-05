@@ -24,16 +24,15 @@ public class User {
     String email;
 
     @NotBlank(groups = CreateValidationGroup.class, message = "Логин не указан")
-    @Pattern(regexp = "\\S+", groups = {CreateValidationGroup.class, UpdateValidationGroup.class},
-            message = "Логин не должен содержать пробелы")
+    @Pattern(regexp = "\\S+", message = "Логин не должен содержать пробелы")
     String login;
 
     String name;
 
-    @PastOrPresent(groups = {CreateValidationGroup.class, UpdateValidationGroup.class},
-            message = "Дата рождения не может быть в будущем")
+    @PastOrPresent(message = "Дата рождения не может быть в будущем")
     LocalDate birthday;
 
+    @Builder.Default
     Set<Long> friends = new HashSet<>();
 
     public String getName() {

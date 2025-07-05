@@ -36,6 +36,7 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть более 1 минуты")
     Integer duration;
 
+    @Builder.Default
     Set<Long> likes = new HashSet<>();
 
     public void addLike(Long userId) {

@@ -84,4 +84,10 @@ public class GlobalExceptionHandler {
         log.warn("Некорректные данные: {}", ex.getMessage());
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleAnyException(Exception ex) {
+        log.error("Внутренняя ошибка сервера", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Внутренняя ошибка сервера");
+    }
 }

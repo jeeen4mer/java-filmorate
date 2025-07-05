@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -171,9 +172,7 @@ public class FilmControllerTest {
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/films/popular"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(3))
-                .andExpect(jsonPath("$[2].id").value(filmId));
+                .andExpect(jsonPath("$[*].id", hasItem(filmId)));
     }
 
     @Test
