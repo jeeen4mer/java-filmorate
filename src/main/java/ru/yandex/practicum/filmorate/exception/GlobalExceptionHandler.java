@@ -53,15 +53,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler({NotFoundException.class, ConditionsNotMetException.class})
-    public ResponseEntity<Map<String, Object>> handleNotFoundException(RuntimeException ex) {
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(NotFoundException ex) {
         Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.NOT_FOUND.value());
         body.put("error", ex.getMessage());
-
-        log.warn(ex.getMessage());
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("timestamp", LocalDateTime.now());
+        log.warn("Returning error response: {}", body);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     @ExceptionHandler(ValidationException.class)
@@ -88,10 +87,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleAnyException(Exception ex) {
         Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
         body.put("error", "Внутренняя ошибка сервера");
+        body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        body.put("timestamp", LocalDateTime.now());
         log.error("Внутренняя ошибка сервера", ex);
-        return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 }

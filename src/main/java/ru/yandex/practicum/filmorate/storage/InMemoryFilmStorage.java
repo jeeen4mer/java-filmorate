@@ -10,12 +10,18 @@ import java.util.*;
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
-    private static Long nextId = 1L;
+    private Long nextId = 1L;
     private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
 
     @Override
-    public Collection<Film> findAll() {
-        return films.values();
+    public void clear() {
+        films.clear();
+        nextId = 1L;
+    }
+
+    @Override
+    public List<Film> findAll() {
+        return new ArrayList<>(films.values());
     }
 
     @Override

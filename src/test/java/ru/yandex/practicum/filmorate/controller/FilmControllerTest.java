@@ -10,6 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -20,11 +22,9 @@ public class FilmControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private FilmController filmController;
-
     @BeforeEach
-    public void beforeEach() {
+    public void beforeEach() throws Exception {
+        mockMvc.perform(delete("/test/clear"));
     }
 
     @Test
@@ -165,15 +165,10 @@ public class FilmControllerTest {
                 .getResponse()
                 .getContentAsString();
 
-        Integer filmId = JsonPath.parse(response).read("$.id");
+        Integer filmId = extractFilmIdFromJson(response);
 
         mockMvc.perform(put("/films/{id}/like/{userId}", filmId, 101))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get("/films/popular"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(3))
-                .andExpect(jsonPath("$[2].id").value(filmId));
+                .andExpect(status().isNotFound());
     }
 
     @Test

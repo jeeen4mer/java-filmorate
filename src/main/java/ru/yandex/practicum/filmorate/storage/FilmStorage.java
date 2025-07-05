@@ -5,6 +5,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.util.Collection;
 
 public interface FilmStorage {
+    void clear();
+
     Collection<Film> findAll();
 
     Film add(Film film);

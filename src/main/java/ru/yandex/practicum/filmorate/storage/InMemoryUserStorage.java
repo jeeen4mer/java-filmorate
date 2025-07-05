@@ -9,7 +9,13 @@ import java.util.*;
 @Component
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
-    private static Long nextId = 1L;
+    private Long nextId = 1L;
+
+    @Override
+    public void clear() {
+        users.clear();
+        nextId = 1L;
+    }
 
     @Override
     public Collection<User> findAll() {

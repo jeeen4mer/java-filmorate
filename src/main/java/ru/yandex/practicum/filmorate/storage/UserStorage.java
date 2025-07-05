@@ -5,6 +5,8 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.Collection;
 
 public interface UserStorage {
+    void clear();
+
     Collection<User> findAll();
 
     User add(User user);
@@ -12,4 +14,5 @@ public interface UserStorage {
     User update(User user);
 
     User getById(Long id);
+
 }
