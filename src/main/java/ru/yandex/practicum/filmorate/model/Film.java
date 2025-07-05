@@ -9,16 +9,16 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Builder;
 import lombok.experimental.FieldDefaults;
-
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(of = {"id"})
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Film {
-
-    private static final int MAX_DESCRIPTION_LENGTH = 200;
+    static final int MAX_DESCRIPTION_LENGTH = 200;
 
     Long id;
 
@@ -35,4 +35,23 @@ public class Film {
 
     @Positive(message = "Продолжительность фильма должна быть более 1 минуты")
     Integer duration;
+
+    Set<Long> likes = new HashSet<>();
+
+    public void addLike(Long userId) {
+        if (userId == null) return;
+        if (likes == null) {
+            likes = new HashSet<>();
+        }
+        likes.add(userId);
+    }
+
+    public void removeLike(Long userId) {
+        if (userId == null || likes == null) return;
+        likes.remove(userId);
+    }
+
+    public int getLikesCount() {
+        return likes == null ? 0 : likes.size();
+    }
 }
