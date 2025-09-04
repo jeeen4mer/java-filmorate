@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -9,6 +10,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Builder;
 import lombok.experimental.FieldDefaults;
+import ru.yandex.practicum.filmorate.validation.MinReleaseDate;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -25,18 +27,19 @@ public class Film {
     @NotBlank(message = "Название фильма не указано")
     String name;
 
-    @Size(max = MAX_DESCRIPTION_LENGTH,
-            message = "Описание фильма превышает 200 символов")
+    @Size(max = MAX_DESCRIPTION_LENGTH, message = "Описание фильма превышает 200 символов")
     @NotBlank(message = "Описание фильма не указано")
     String description;
 
     @NotNull(message = "Дата релиза обязательна")
+    @MinReleaseDate(message = "Дата релиза должна быть не раньше 28 декабря 1895 года")
     LocalDate releaseDate;
 
     @Positive(message = "Продолжительность фильма должна быть более 1 минуты")
     Integer duration;
 
     @Builder.Default
+    @JsonIgnore
     Set<Long> likes = new HashSet<>();
 
     public void addLike(Long userId) {
