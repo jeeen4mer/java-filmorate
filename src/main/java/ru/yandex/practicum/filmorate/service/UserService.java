@@ -40,6 +40,7 @@ public class UserService {
     public void addFriend(Long userId, Long friendId) {
         User user = userStorage.getById(userId);
         User friend = userStorage.getById(friendId);
+
         user.getFriends().add(friendId);
         friend.getFriends().add(userId);
         userStorage.update(user);
@@ -49,6 +50,7 @@ public class UserService {
     public void removeFriend(Long userId, Long friendId) {
         User user = userStorage.getById(userId);
         User friend = userStorage.getById(friendId);
+
         user.getFriends().remove(friendId);
         friend.getFriends().remove(userId);
         userStorage.update(user);
