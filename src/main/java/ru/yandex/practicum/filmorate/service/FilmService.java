@@ -2,25 +2,39 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class FilmService {
     private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
 
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
+    public FilmService(FilmStorage filmStorage) {
         this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
+    }
+
+    public Collection<Film> findAll() {
+        return filmStorage.findAll();
+    }
+
+    public Film add(Film film) {
+        return filmStorage.add(film);
+    }
+
+    public Film update(Film film) {
+        return filmStorage.update(film);
+    }
+
+    public Film getById(Long id) {
+        return filmStorage.getById(id);
     }
 
     public void likeFilm(Long filmId, Long userId) {
         filmStorage.getById(filmId);
-        userStorage.getById(userId);
+        filmStorage.getById(userId);
         Film film = filmStorage.getById(filmId);
         film.addLike(userId);
         filmStorage.update(film);
@@ -28,7 +42,7 @@ public class FilmService {
 
     public void unlikeFilm(Long filmId, Long userId) {
         filmStorage.getById(filmId);
-        userStorage.getById(userId);
+        filmStorage.getById(userId);
         Film film = filmStorage.getById(filmId);
         film.removeLike(userId);
         filmStorage.update(film);

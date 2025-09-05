@@ -15,6 +15,28 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
+    public Collection<User> findAll() {
+        return userStorage.findAll();
+    }
+
+    public User add(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+        return userStorage.add(user);
+    }
+
+    public User update(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+        return userStorage.update(user);
+    }
+
+    public User getById(Long id) {
+        return userStorage.getById(id);
+    }
+
     public void addFriend(Long userId, Long friendId) {
         User user = userStorage.getById(userId);
         User friend = userStorage.getById(friendId);

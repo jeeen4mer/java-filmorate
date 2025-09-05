@@ -5,11 +5,10 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class InMemoryUserStorage implements UserStorage {
-    private final Map<Long, User> users = new ConcurrentHashMap<>();
+    private final Map<Long, User> users = new HashMap<>();
     private final Set<String> emails = new HashSet<>();
     private Long nextId = 1L;
 

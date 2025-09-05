@@ -5,11 +5,10 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
-    private final Map<Long, Film> films = new ConcurrentHashMap<>();
+    private final Map<Long, Film> films = new HashMap<>();
     private Long nextId = 1L;
 
     @Override
