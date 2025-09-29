@@ -17,7 +17,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 
-
 class UserControllerTest {
 
     @Autowired
@@ -108,18 +107,34 @@ class UserControllerTest {
     @DisplayName("Удаление из друзей")
     void shouldRemoveFriend() throws Exception {
 
-        String user1 = "{\"email\":\"user1@test.ru\",\"login\":\"user1\",\"birthday\":\"1990-01-01\"}";
-        String user2 = "{\"email\":\"user2@test.ru\",\"login\":\"user2\",\"birthday\":\"1990-01-01\"}";
+        String user1Json = "{\"email\":\"user1@test.ru\",\"login\":\"user1\",\"birthday\":\"1990-01-01\"}";
+        String user2Json = "{\"email\":\"user2@test.ru\",\"login\":\"user2\",\"birthday\":\"1990-01-01\"}";
 
-        mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON).content(user1));
-        mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON).content(user2));
+        MvcResult result1 = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(user1Json))
+                .andExpect(status().isOk())
+                .andReturn();
 
-        mockMvc.perform(put("/users/1/friends/2"));
-        mockMvc.perform(put("/users/2/friends/confirm/1"));
+        MvcResult result2 = mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(user2Json))
+                .andExpect(status().isOk())
+                .andReturn();
 
-        mockMvc.perform(delete("/users/1/friends/2")).andExpect(status().isOk());
+        Integer userId1 = extractIdFromJson(result1.getResponse().getContentAsString());
+        Integer userId2 = extractIdFromJson(result2.getResponse().getContentAsString());
 
-        mockMvc.perform(get("/users/1/friends"))
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", userId1, userId2))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(put("/users/{id}/friends/confirm/{friendId}", userId2, userId1))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(delete("/users/{id}/friends/{friendId}", userId1, userId2))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/users/{id}/friends", userId1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }

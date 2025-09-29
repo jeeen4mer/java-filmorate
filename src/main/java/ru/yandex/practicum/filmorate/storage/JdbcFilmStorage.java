@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -14,12 +15,17 @@ import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.util.*;
 
+@Slf4j
 @Component
 @Primary
 
 public class JdbcFilmStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
+
+    public JdbcTemplate getJdbcTemplate() {
+        return jdbcTemplate;
+    }
 
     @Autowired
     public JdbcFilmStorage(JdbcTemplate jdbcTemplate) {

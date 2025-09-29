@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 @RestController
 @RequestMapping("/test")
+
 public class TestController {
 
     private final FilmStorage filmStorage;
