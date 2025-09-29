@@ -130,9 +130,9 @@ public class JdbcFilmStorage implements FilmStorage {
 
     private Set<Genre> getGenresByFilmId(Long filmId) {
         String sql = """
-            SELECT g.genre_id, g.name 
-            FROM genres g 
-            JOIN film_genres fg ON g.genre_id = fg.genre_id 
+            SELECT g.genre_id, g.name
+            FROM genres g
+            JOIN film_genres fg ON g.genre_id = fg.genre_id
             WHERE fg.film_id = ?
             """;
         return new HashSet<>(jdbcTemplate.query(sql, (rs, rowNum) -> Genre.builder()
