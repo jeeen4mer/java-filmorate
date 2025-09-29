@@ -1,14 +1,12 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Builder;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.yandex.practicum.filmorate.validation.MinReleaseDate;
 import java.time.LocalDate;
@@ -16,9 +14,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@EqualsAndHashCode(of = {"id"})
+@EqualsAndHashCode(of = "id")
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@NoArgsConstructor
+@AllArgsConstructor
 public class Film {
     static final int MAX_DESCRIPTION_LENGTH = 200;
 
@@ -37,6 +37,14 @@ public class Film {
 
     @Positive(message = "Продолжительность фильма должна быть более 1 минуты")
     Integer duration;
+
+    @Valid
+    @NotNull(message = "Рейтинг MPA обязателен")
+    MpaRating mpa;
+
+    @Singular
+    @Valid
+    Set<Genre> genres = new HashSet<>();
 
     @Builder.Default
     @JsonIgnore
