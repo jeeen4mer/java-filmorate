@@ -7,5 +7,6 @@ import java.util.Collection;
 public interface MpaStorage {
 
     Collection<MpaRating> getAll();
+
     MpaRating getById(Integer id);
 }
