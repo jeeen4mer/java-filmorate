@@ -133,8 +133,6 @@ public class JdbcUserStorage implements UserStorage {
 
         String sql = "DELETE FROM friendships WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
         int rows = jdbcTemplate.update(sql, userId, friendId, friendId, userId);
-        if (rows == 0) {
-        }
     }
 
     @Override
