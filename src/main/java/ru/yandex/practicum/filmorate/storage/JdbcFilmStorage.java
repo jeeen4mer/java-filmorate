@@ -57,7 +57,7 @@ public class JdbcFilmStorage implements FilmStorage {
         if (filmId == null) return Collections.emptySet();
 
         String sql = """
-            SELECT g.genre_id, g.name 
+            SELECT g.genre_id, g.name
             FROM genres g
             INNER JOIN film_genres fg ON g.genre_id = fg.genre_id
             WHERE fg.film_id = ?
@@ -114,7 +114,7 @@ public class JdbcFilmStorage implements FilmStorage {
     @Override
     public Collection<Film> findAll() {
         String sql = """
-            SELECT f.film_id, f.name, f.description, f.release_date, f.duration, 
+            SELECT f.film_id, f.name, f.description, f.release_date, f.duration,
                    m.rating_id AS mpa_id, m.name AS mpa_name
             FROM films f
             LEFT JOIN mpa_ratings m ON f.rating_id = m.rating_id
@@ -221,7 +221,7 @@ public class JdbcFilmStorage implements FilmStorage {
         validateFilmExists(id);
 
         String sql = """
-            SELECT f.film_id, f.name, f.description, f.release_date, f.duration, 
+            SELECT f.film_id, f.name, f.description, f.release_date, f.duration,
                    m.rating_id AS mpa_id, m.name AS mpa_name
             FROM films f
             LEFT JOIN mpa_ratings m ON f.rating_id = m.rating_id
