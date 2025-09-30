@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -135,7 +134,7 @@ public class JdbcFilmStorage implements FilmStorage {
         validateFilmExists(id);
 
         String sql = """
-        SELECT f.film_id, f.name, f.description, f.release_date, f.duration, 
+        SELECT f.film_id, f.name, f.description, f.release_date, f.duration,
                m.rating_id AS mpa_id, m.name AS mpa_name
         FROM films f
         LEFT JOIN mpa_ratings m ON f.rating_id = m.rating_id
