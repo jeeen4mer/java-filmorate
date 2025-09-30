@@ -180,7 +180,7 @@ public class FilmControllerTest {
         mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON).content(userJson));
 
         mockMvc.perform(put("/films/{id}/like/{userId}", filmId, 1))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
     }
 
     @Test

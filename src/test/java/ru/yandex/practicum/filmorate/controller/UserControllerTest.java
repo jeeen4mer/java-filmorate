@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -33,7 +34,7 @@ class UserControllerTest {
         String userJson = String.format("{\"email\":\"test@test.ru\",\"login\":\"login\",\"name\":\"name\",\"birthday\":\"%s\"}",
                 java.time.LocalDate.now().plusDays(1));
         mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(userJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessages[0]").value("Дата рождения не может быть в будущем"));
@@ -44,7 +45,7 @@ class UserControllerTest {
     void createUserWithEmptyEmail_ShouldReturnBadRequest() throws Exception {
         String userJson = "{ \"email\": \"\", \"login\": \"login\", \"name\": \"name\", \"birthday\": \"1990-01-01\"}";
         mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(userJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessages[0]").value("Электронная почта не указана"));
@@ -55,48 +56,34 @@ class UserControllerTest {
     void createUserWithSpacesInLogin_ShouldReturnBadRequest() throws Exception {
         String userJson = "{\"email\":\"test@test.ru\",\"login\":\"log in\",\"name\":\"name\",\"birthday\":\"1990-01-01\"}";
         mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(userJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessages[0]").value("Логин не должен содержать пробелы"));
     }
 
     @Test
-    @DisplayName("Добавление и подтверждение дружбы")
-    void shouldAddAndConfirmFriend() throws Exception {
+    @DisplayName("Добавление в друзья без подтверждения")
+    void shouldAddFriendImmediately() throws Exception {
 
-        String user1Json = "{\"email\":\"user1@test.ru\",\"login\":\"user1\",\"name\":\"User One\",\"birthday\":\"1990-01-01\"}";
-        String user2Json = "{\"email\":\"user2@test.ru\",\"login\":\"user2\",\"name\":\"User Two\",\"birthday\":\"1990-01-01\"}";
+        String user1Json = "{\"email\":\"u1@test.ru\",\"login\":\"u1\",\"birthday\":\"1990-01-01\"}";
+        String user2Json = "{\"email\":\"u2@test.ru\",\"login\":\"u2\",\"birthday\":\"1990-01-01\"}";
 
-        MvcResult result1 = mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(user1Json))
-                .andExpect(status().isOk())
-                .andReturn();
+        MvcResult r1 = mockMvc.perform(post("/users").contentType(APPLICATION_JSON).content(user1Json)).andExpect(status().isOk()).andReturn();
+        MvcResult r2 = mockMvc.perform(post("/users").contentType(APPLICATION_JSON).content(user2Json)).andExpect(status().isOk()).andReturn();
 
-        MvcResult result2 = mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(user2Json))
-                .andExpect(status().isOk())
-                .andReturn();
+        long id1 = extractIdFromJson(r1.getResponse().getContentAsString());
+        long id2 = extractIdFromJson(r2.getResponse().getContentAsString());
 
-        Integer userId1 = extractIdFromJson(result1.getResponse().getContentAsString());
-        Integer userId2 = extractIdFromJson(result2.getResponse().getContentAsString());
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", id1, id2))
+                .andExpect(status().isNoContent());
 
-        mockMvc.perform(put("/users/{id}/friends/{friendId}", userId1, userId2))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get("/users/{id}/friends", userId1))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
-
-        mockMvc.perform(put("/users/{id}/friends/confirm/{friendId}", userId2, userId1))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get("/users/{id}/friends", userId1))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/users/{id}/friends", id1))
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(userId2));
+                .andExpect(jsonPath("$[0].id").value(id2));
+
+        mockMvc.perform(get("/users/{id}/friends", id2))
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     private Integer extractIdFromJson(String jsonResponse) throws Exception {
@@ -106,18 +93,17 @@ class UserControllerTest {
     @Test
     @DisplayName("Удаление из друзей")
     void shouldRemoveFriend() throws Exception {
-
         String user1Json = "{\"email\":\"user1@test.ru\",\"login\":\"user1\",\"birthday\":\"1990-01-01\"}";
         String user2Json = "{\"email\":\"user2@test.ru\",\"login\":\"user2\",\"birthday\":\"1990-01-01\"}";
 
         MvcResult result1 = mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(user1Json))
                 .andExpect(status().isOk())
                 .andReturn();
 
         MvcResult result2 = mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(user2Json))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -126,13 +112,10 @@ class UserControllerTest {
         Integer userId2 = extractIdFromJson(result2.getResponse().getContentAsString());
 
         mockMvc.perform(put("/users/{id}/friends/{friendId}", userId1, userId2))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(put("/users/{id}/friends/confirm/{friendId}", userId2, userId1))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(delete("/users/{id}/friends/{friendId}", userId1, userId2))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/users/{id}/friends", userId1))
                 .andExpect(status().isOk())
@@ -143,47 +126,24 @@ class UserControllerTest {
     @DisplayName("Получение общих друзей")
     void shouldGetCommonFriends() throws Exception {
 
-        String user1Json = "{\"email\":\"user1@test.ru\",\"login\":\"user1\",\"birthday\":\"1990-01-01\"}";
-        String user2Json = "{\"email\":\"user2@test.ru\",\"login\":\"user2\",\"birthday\":\"1990-01-01\"}";
-        String user3Json = "{\"email\":\"user3@test.ru\",\"login\":\"user3\",\"birthday\":\"1990-01-01\"}";
+        String user1Json = "{\"email\":\"u1@test.ru\",\"login\":\"u1\",\"birthday\":\"1990-01-01\"}";
+        String user2Json = "{\"email\":\"u2@test.ru\",\"login\":\"u2\",\"birthday\":\"1990-01-01\"}";
+        String user3Json = "{\"email\":\"u3@test.ru\",\"login\":\"u3\",\"birthday\":\"1990-01-01\"}";
 
-        MvcResult result1 = mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(user1Json))
-                .andExpect(status().isOk())
-                .andReturn();
+        MvcResult r1 = mockMvc.perform(post("/users").contentType(APPLICATION_JSON).content(user1Json)).andExpect(status().isOk()).andReturn();
+        MvcResult r2 = mockMvc.perform(post("/users").contentType(APPLICATION_JSON).content(user2Json)).andExpect(status().isOk()).andReturn();
+        MvcResult r3 = mockMvc.perform(post("/users").contentType(APPLICATION_JSON).content(user3Json)).andExpect(status().isOk()).andReturn();
 
-        MvcResult result2 = mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(user2Json))
-                .andExpect(status().isOk())
-                .andReturn();
+        long id1 = extractIdFromJson(r1.getResponse().getContentAsString());
+        long id2 = extractIdFromJson(r2.getResponse().getContentAsString());
+        long id3 = extractIdFromJson(r3.getResponse().getContentAsString());
 
-        MvcResult result3 = mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(user3Json))
-                .andExpect(status().isOk())
-                .andReturn();
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", id1, id3)).andExpect(status().isNoContent());
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", id2, id3)).andExpect(status().isNoContent());
 
-        Integer userId1 = extractIdFromJson(result1.getResponse().getContentAsString());
-        Integer userId2 = extractIdFromJson(result2.getResponse().getContentAsString());
-        Integer userId3 = extractIdFromJson(result3.getResponse().getContentAsString());
-
-        mockMvc.perform(put("/users/{id}/friends/{friendId}", userId1, userId3))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(put("/users/{id}/friends/confirm/{friendId}", userId3, userId1))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(put("/users/{id}/friends/{friendId}", userId2, userId3))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(put("/users/{id}/friends/confirm/{friendId}", userId3, userId2))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get("/users/{id}/friends/common/{otherId}", userId1, userId2))
+        mockMvc.perform(get("/users/{id}/friends/common/{otherId}", id1, id2))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(userId3));
+                .andExpect(jsonPath("$[0].id").value(id3));
     }
 }

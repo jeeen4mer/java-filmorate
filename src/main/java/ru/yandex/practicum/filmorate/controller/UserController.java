@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
@@ -51,21 +52,16 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public void addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+    public ResponseEntity<Void> addFriend(@PathVariable Long id, @PathVariable Long friendId) {
         log.info("Пользователь с ID={} отправляет запрос в друзья пользователю с ID={}", id, friendId);
         userService.addFriend(id, friendId);
-    }
-
-    @PutMapping("/{id}/friends/confirm/{friendId}")
-    public void confirmFriendRequest(@PathVariable Long id, @PathVariable Long friendId) {
-        log.info("Пользователь с ID={} подтверждает запрос в друзья от пользователя с ID={}", id, friendId);
-        userService.confirmFriendRequest(id, friendId);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public void removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        log.info("Пользователь с ID={} удаляет пользователя с ID={} из друзей", id, friendId);
+    public ResponseEntity<Void> removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
         userService.removeFriend(id, friendId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/friends")

@@ -4,6 +4,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
@@ -43,5 +44,25 @@ public class InMemoryFilmStorage implements FilmStorage {
             throw new NotFoundException("Фильм с id=" + id + " не найден");
         }
         return film;
+    }
+
+    @Override
+    public void addLike(Long filmId, Long userId) {
+        Film film = getById(filmId);
+        film.addLike(userId);
+    }
+
+    @Override
+    public void removeLike(Long filmId, Long userId) {
+        Film film = getById(filmId);
+        film.removeLike(userId);
+    }
+
+    @Override
+    public List<Film> getPopular(int count) {
+        return films.values().stream()
+                .sorted((f1, f2) -> Integer.compare(f2.getCurrentLikesCount(), f1.getCurrentLikesCount()))
+                .limit(count)
+                .collect(Collectors.toList());
     }
 }

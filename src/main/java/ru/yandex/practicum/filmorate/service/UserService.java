@@ -51,14 +51,6 @@ public class UserService {
         userStorage.addFriendRequest(userId, friendId);
     }
 
-    public void confirmFriendRequest(Long userId, Long friendId) {
-
-        if (!userStorage.containsUser(userId) || !userStorage.containsUser(friendId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-        userStorage.confirmFriendRequest(userId, friendId);
-    }
-
     public void removeFriend(Long userId, Long friendId) {
         userStorage.removeFriend(userId, friendId);
     }
@@ -69,7 +61,8 @@ public class UserService {
 
     public Collection<User> getCommonFriends(Long userId, Long otherId) {
         var friendsOfFirst = new HashSet<>(userStorage.getConfirmedFriends(userId));
-        return userStorage.getConfirmedFriends(otherId).stream()
+        return userStorage.getConfirmedFriends(otherId)
+                .stream()
                 .filter(friendsOfFirst::contains)
                 .collect(Collectors.toList());
     }

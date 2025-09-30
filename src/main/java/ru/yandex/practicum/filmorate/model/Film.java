@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.yandex.practicum.filmorate.validation.MinReleaseDate;
+
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,7 +21,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Film {
-    static final int MAX_DESCRIPTION_LENGTH = 200;
+    public static final int MAX_DESCRIPTION_LENGTH = 200;
 
     Long id;
 
@@ -50,11 +51,10 @@ public class Film {
     @JsonIgnore
     Set<Long> likes = new HashSet<>();
 
+    transient int likesCount;
+
     public void addLike(Long userId) {
-        if (userId == null) return;
-        if (likes == null) {
-            likes = new HashSet<>();
-        }
+        if (userId == null || likes == null) return;
         likes.add(userId);
     }
 
@@ -63,7 +63,7 @@ public class Film {
         likes.remove(userId);
     }
 
-    public int getLikesCount() {
+    public int getCurrentLikesCount() {
         return likes == null ? 0 : likes.size();
     }
 }

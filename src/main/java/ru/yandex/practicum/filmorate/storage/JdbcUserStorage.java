@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
@@ -17,7 +16,6 @@ import java.util.*;
 @Component
 @Primary
 @Slf4j
-
 public class JdbcUserStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
@@ -39,13 +37,19 @@ public class JdbcUserStorage implements UserStorage {
 
     @Override
     public void clear() {
+        jdbcTemplate.execute("SET REFERENTIAL_INTEGRITY FALSE");
+
         jdbcTemplate.update("DELETE FROM friendships");
         jdbcTemplate.update("DELETE FROM users");
+
+        jdbcTemplate.update("ALTER TABLE users ALTER COLUMN user_id RESTART WITH 1");
+
+        jdbcTemplate.execute("SET REFERENTIAL_INTEGRITY TRUE");
     }
 
     @Override
     public Collection<User> findAll() {
-        String sql = "SELECT * FROM users";
+        String sql = "SELECT * FROM users ORDER BY user_id";
         return jdbcTemplate.query(sql, this::mapRowToUser);
     }
 
@@ -55,25 +59,27 @@ public class JdbcUserStorage implements UserStorage {
                 .withTableName("users")
                 .usingGeneratedKeyColumns("user_id");
 
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("email", user.getEmail());
-        parameters.put("login", user.getLogin());
-        parameters.put("name", user.getName() != null && !user.getName().isBlank() ? user.getName() : user.getLogin());
-        parameters.put("birthday", java.sql.Date.valueOf(user.getBirthday()));
+        Map<String, Object> params = new HashMap<>();
+        params.put("email", user.getEmail());
+        params.put("login", user.getLogin());
+        params.put("name", user.getName() != null && !user.getName().isBlank() ? user.getName() : user.getLogin());
+        params.put("birthday", java.sql.Date.valueOf(user.getBirthday()));
 
         try {
-            Number key = insert.executeAndReturnKey(parameters);
+            Number key = insert.executeAndReturnKey(params);
             user.setId(key.longValue());
             log.info("Добавлен пользователь: {}", user.getLogin());
             return user;
-        } catch (DataAccessException e) {
-            log.error("Ошибка при добавлении пользователя: {}", e.getMessage());
+        } catch (Exception e) {
+            log.error("Ошибка при добавлении пользователя: {}", e.getMessage(), e);
             throw new RuntimeException("Не удалось добавить пользователя", e);
         }
     }
 
     @Override
     public User update(User user) {
+        validateUserExists(user.getId());
+
         String sql = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ?";
         int rows = jdbcTemplate.update(sql,
                 user.getEmail(),
@@ -85,6 +91,8 @@ public class JdbcUserStorage implements UserStorage {
         if (rows == 0) {
             throw new NotFoundException("Пользователь с id=" + user.getId() + " не найден");
         }
+
+        log.info("Обновлён пользователь: {}", user.getLogin());
         return user;
     }
 
@@ -100,30 +108,23 @@ public class JdbcUserStorage implements UserStorage {
         validateUserExists(userId);
         validateUserExists(friendId);
 
+        if (userId.equals(friendId)) {
+            throw new IllegalArgumentException("Нельзя добавить самого себя в друзья");
+        }
+
         String checkSql = "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ?";
         Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, userId, friendId);
         if (count != null && count > 0) {
             return;
         }
 
-        String insertSql = "INSERT INTO friendships (user_id, friend_id, status) VALUES (?, ?, 'UNCONFIRMED')";
+        String insertSql = "INSERT INTO friendships (user_id, friend_id, status) VALUES (?, ?, 'CONFIRMED')";
         jdbcTemplate.update(insertSql, userId, friendId);
-        jdbcTemplate.update(insertSql, friendId, userId);
     }
 
     @Override
     public void confirmFriendRequest(Long userId, Long friendId) {
-        validateUserExists(userId);
-        validateUserExists(friendId);
-
-        String checkSql = "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ? AND status = 'UNCONFIRMED'";
-        if (jdbcTemplate.queryForObject(checkSql, Integer.class, userId, friendId) == 0) {
-            throw new NotFoundException("Запрос в друзья от пользователя с id=" + friendId + " к пользователю с id=" + userId + " не найден");
-        }
-
-        String updateSql = "UPDATE friendships SET status = 'CONFIRMED' WHERE user_id = ? AND friend_id = ?";
-        jdbcTemplate.update(updateSql, userId, friendId);
-        jdbcTemplate.update(updateSql, friendId, userId);
+        throw new UnsupportedOperationException("Подтверждение дружбы не требуется");
     }
 
     @Override
@@ -131,30 +132,37 @@ public class JdbcUserStorage implements UserStorage {
         validateUserExists(userId);
         validateUserExists(friendId);
 
-        String sql = "DELETE FROM friendships WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
-        int rows = jdbcTemplate.update(sql, userId, friendId, friendId, userId);
+        String sql = "DELETE FROM friendships WHERE user_id = ? AND friend_id = ?";
+        int rows = jdbcTemplate.update(sql, userId, friendId);
+        if (rows == 0) {
+            log.warn("Попытка удалить несуществующую дружбу: {} -> {}", userId, friendId);
+        }
     }
 
     @Override
     public Collection<User> getConfirmedFriends(Long userId) {
+        validateUserExists(userId);
+
         String sql = """
-            SELECT u.* FROM users u
-            JOIN friendships f ON u.user_id = f.friend_id
-            WHERE f.user_id = ? AND f.status = 'CONFIRMED'
-            """;
+        SELECT u.*
+        FROM users u
+        INNER JOIN friendships f ON u.user_id = f.friend_id
+        WHERE f.user_id = ? AND f.status = 'CONFIRMED'
+        ORDER BY u.user_id
+        """;
+
         return jdbcTemplate.query(sql, this::mapRowToUser, userId);
     }
 
     @Override
     public boolean containsUser(Long userId) {
         String sql = "SELECT COUNT(*) FROM users WHERE user_id = ?";
-        return jdbcTemplate.queryForObject(sql, Integer.class, userId) > 0;
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId);
+        return count != null && count > 0;
     }
 
     private void validateUserExists(Long userId) {
-        String sql = "SELECT COUNT(*) FROM users WHERE user_id = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId);
-        if (count == null || count == 0) {
+        if (!containsUser(userId)) {
             throw new NotFoundException("Пользователь с id=" + userId + " не найден");
         }
     }

@@ -43,19 +43,18 @@ CREATE TABLE IF NOT EXISTS film_genres (
 );
 
 CREATE TABLE IF NOT EXISTS film_likes (
-    film_id BIGINT,
-    user_id BIGINT,
+    film_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
     PRIMARY KEY (film_id, user_id),
-    FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (film_id) REFERENCES films (film_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS friendships (
+CREATE TABLE friendships (
     user_id BIGINT,
     friend_id BIGINT,
-    status VARCHAR(20) NOT NULL,
+    status VARCHAR(20),
     PRIMARY KEY (user_id, friend_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (friend_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    CHECK (user_id <> friend_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (friend_id) REFERENCES users(user_id)
 );
