@@ -13,6 +13,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 @Slf4j
@@ -25,6 +27,31 @@ public class JdbcFilmStorage implements FilmStorage {
 
     public JdbcTemplate getJdbcTemplate() {
         return jdbcTemplate;
+    }
+
+    private void validateFilmExists(Long id) {
+        if (!containsFilm(id)) {
+            throw new NotFoundException("Фильм с id=" + id + " не найден");
+        }
+    }
+
+    private Set<Genre> loadGenresForFilm(Long filmId) {
+        String sql = """
+        SELECT g.genre_id, g.name
+        FROM genres g
+        INNER JOIN film_genres fg ON g.genre_id = fg.genre_id
+        WHERE fg.film_id = ?
+        ORDER BY g.genre_id
+        """;
+
+        List<Genre> genres = jdbcTemplate.query(sql, (rs, rowNum) ->
+                        Genre.builder()
+                                .id(rs.getInt("genre_id"))
+                                .name(rs.getString("name"))
+                                .build(),
+                filmId);
+
+        return new LinkedHashSet<>(genres); // Сохраняем порядок
     }
 
     @Autowired
@@ -105,10 +132,45 @@ public class JdbcFilmStorage implements FilmStorage {
 
     @Override
     public Film getById(Long id) {
+        validateFilmExists(id);
+
+        String sql = """
+        SELECT f.film_id, f.name, f.description, f.release_date, f.duration, 
+               m.rating_id AS mpa_id, m.name AS mpa_name
+        FROM films f
+        LEFT JOIN mpa_ratings m ON f.rating_id = m.rating_id
+        WHERE f.film_id = ?
+        """;
+
         try {
-            String sql = "SELECT * FROM films WHERE film_id = ?";
-            return jdbcTemplate.queryForObject(sql, filmRowMapper, id);
-        } catch (EmptyResultDataAccessException e) {
+            Film film = jdbcTemplate.queryForObject(sql, new RowMapper<Film>() {
+                @Override
+                public Film mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    MpaRating mpa = MpaRating.builder()
+                            .id(rs.getInt("mpa_id"))
+                            .name(rs.getString("mpa_name"))
+                            .build();
+
+                    return Film.builder()
+                            .id(rs.getLong("film_id"))
+                            .name(rs.getString("name"))
+                            .description(rs.getString("description"))
+                            .releaseDate(rs.getDate("release_date").toLocalDate())
+                            .duration(rs.getInt("duration"))
+                            .mpa(mpa)
+                            .build();
+                }
+            }, id);
+
+            if (film == null) {
+                throw new NotFoundException("Фильм с id=" + id + " не найден");
+            }
+
+            film.setGenres(loadGenresForFilm(film.getId()));
+
+            return film;
+        } catch (Exception e) {
+            log.error("Ошибка при получении фильма с id={}", id, e);
             throw new NotFoundException("Фильм с id=" + id + " не найден");
         }
     }
