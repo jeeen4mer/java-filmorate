@@ -14,7 +14,6 @@ import java.util.Collection;
 
 @Component
 @RequiredArgsConstructor
-
 public class JdbcMpaStorage implements MpaStorage {
 
     private final JdbcTemplate jdbcTemplate;

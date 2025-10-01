@@ -13,7 +13,6 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/genres")
 @RequiredArgsConstructor
-
 public class GenreController {
 
     private final GenreStorage genreStorage;

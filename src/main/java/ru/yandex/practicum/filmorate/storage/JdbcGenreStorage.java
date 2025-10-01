@@ -12,7 +12,6 @@ import java.util.Collection;
 
 @Component
 @RequiredArgsConstructor
-
 public class JdbcGenreStorage implements GenreStorage {
 
     private final JdbcTemplate jdbcTemplate;

@@ -12,7 +12,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-
 public class User {
     @Null(groups = CreateValidationGroup.class, message = "ID должен быть null при создании")
     @NotNull(groups = UpdateValidationGroup.class, message = "ID не может быть null при обновлении")
