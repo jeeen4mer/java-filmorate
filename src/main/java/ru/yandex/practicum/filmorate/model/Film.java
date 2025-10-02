@@ -1,26 +1,27 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Builder;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.yandex.practicum.filmorate.validation.MinReleaseDate;
+
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@EqualsAndHashCode(of = {"id"})
+@EqualsAndHashCode(of = "id")
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@NoArgsConstructor
+@AllArgsConstructor
 public class Film {
-    static final int MAX_DESCRIPTION_LENGTH = 200;
+    public static final int MAX_DESCRIPTION_LENGTH = 200;
 
     Long id;
 
@@ -38,15 +39,22 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть более 1 минуты")
     Integer duration;
 
+    @Valid
+    @NotNull(message = "Рейтинг MPA обязателен")
+    MpaRating mpa;
+
+    @Singular
+    @Valid
+    Set<Genre> genres = new HashSet<>();
+
     @Builder.Default
     @JsonIgnore
     Set<Long> likes = new HashSet<>();
 
+    transient int likesCount;
+
     public void addLike(Long userId) {
-        if (userId == null) return;
-        if (likes == null) {
-            likes = new HashSet<>();
-        }
+        if (userId == null || likes == null) return;
         likes.add(userId);
     }
 
@@ -55,7 +63,7 @@ public class Film {
         likes.remove(userId);
     }
 
-    public int getLikesCount() {
+    public int getCurrentLikesCount() {
         return likes == null ? 0 : likes.size();
     }
 }

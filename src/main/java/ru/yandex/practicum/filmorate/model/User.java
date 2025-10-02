@@ -1,14 +1,11 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.yandex.practicum.filmorate.validation.CreateValidationGroup;
 import ru.yandex.practicum.filmorate.validation.UpdateValidationGroup;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 @Data
 @Builder
@@ -34,9 +31,6 @@ public class User {
     @PastOrPresent(groups = {CreateValidationGroup.class, UpdateValidationGroup.class},
             message = "Дата рождения не может быть в будущем")
     LocalDate birthday;
-
-    @JsonIgnore
-    Set<Long> friends = new HashSet<>();
 
     public String getName() {
         return name == null || name.isBlank() ? login : name;
